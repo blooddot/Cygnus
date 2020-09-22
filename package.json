@@ -1,0 +1,110 @@
+{
+  "name": "cygnus",
+  "version": "1.0.0",
+  "description": "",
+  "main": "./dist/main-bundle.js",
+  "scripts": {
+    "fixFile": "eslint --fix",
+    "fix": "eslint --fix . --ext .ts",
+    "start": "yarn build && electron .",
+    "build": "cross-env NODE_ENV=development webpack --config build/webpack.config.js",
+    "build:prod": "cross-env NODE_ENV=production webpack --config build/webpack.config.js",
+    "build:win": "yarn build:prod &&electron-builder --win --x64",
+    "build:mac": "yarn build:prod &&electron-builder --mac",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "server": "cross-env NODE_ENV=development webpack-dev-server --mode=development --config build/webpack.config.js"
+  },
+  "build": {
+    "productName": "cygnus",
+    "asar": false,
+    "appId": "org.blooddot.cygnus",
+    "copyright": "Copyright © 2020 blooddot",
+    "files": [
+      "./dist/**/*",
+      "./package.json"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "requestedExecutionLevel": "highestAvailable",
+      "icon": "./build/icons/icon.ico"
+    },
+    "dmg": {
+      "sign": false,
+      "contents": [
+        {
+          "x": 410,
+          "y": 150,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 130,
+          "y": 150,
+          "type": "file"
+        }
+      ]
+    },
+    "mac": {
+      "icon": "./build/icons/icon.ico",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "extendInfo": {
+        "CFBundleURLTypes": [
+          {
+            "CFBundleURLName": "org.blooddot.cygnus",
+            "CFBundleURLSchemes": [
+              "cygnus"
+            ]
+          }
+        ]
+      }
+    },
+    "nsis": {
+      "perMachine": true,
+      "menuCategory": true,
+      "allowElevation": true,
+      "deleteAppDataOnUninstall": true,
+      "createDesktopShortcut": true,
+      "installerIcon": "./build/icons/icon.ico",
+      "uninstallerIcon": "./build/icons/icon.ico"
+    },
+    "directories": {
+      "output": "app"
+    },
+    "publish": [
+      {
+        "name": "cygnus",
+        "provider": "generic",
+        "url": ""
+      }
+    ]
+  },
+  "author": "blooddot",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/blooddot/Cygnus/issues"
+  },
+  "homepage": "https://github.com/blooddot/Cygnus#readme",
+  "dependencies": {
+    "electron-updater": "^4.3.5",
+    "fs-extra": "^9.0.1",
+    "ts-morph": "^8.1.1"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.1",
+    "@typescript-eslint/eslint-plugin": "^4.2.0",
+    "@typescript-eslint/parser": "^4.2.0",
+    "cross-env": "^7.0.2",
+    "electron": "^10.1.2",
+    "electron-builder": "^22.8.1",
+    "electron-notarize": "^1.0.0",
+    "eslint": "^7.9.0",
+    "html-webpack-plugin": "^4.5.0",
+    "ts-loader": "^8.0.4",
+    "typescript": "^4.0.3",
+    "webpack": "^4.44.2",
+    "webpack-cli": "^3.3.12"
+  }
+}
