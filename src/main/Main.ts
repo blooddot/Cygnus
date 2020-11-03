@@ -5,7 +5,7 @@
  * @FilePath \Cygnus\src\main\Main.ts
  */
 // Modules to control application life and create native browser window
-import { app, globalShortcut, BrowserWindow, Menu, shell, dialog, webContents } from 'electron';
+import { app, globalShortcut, BrowserWindow, Menu, shell, dialog, MenuItem } from 'electron';
 import * as process from 'process';
 import { Project, StructureKind } from "ts-morph";
 
@@ -22,8 +22,6 @@ class Main {
     private onAppReady(): void {
         this.createWindow();
 
-
-
         let shortCut = "";
         if (process.platform === 'darwin') {
             shortCut = 'Alt+Command+I';
@@ -38,18 +36,13 @@ class Main {
     // 当运行第二个实例时,将会聚焦到mainWindow这个窗口
     private onAppSecondInstance(tEvent: Event, tArgv: string[], tWorkingDirectory: string): void {
         if (process.platform === 'win32') {
-            this.showSecondInstanceAlert();
+            if (this._mainWindow) {
+                if (this._mainWindow.isMinimized()) {
+                    this._mainWindow.restore();
+                }
+                this._mainWindow.focus();
+            }
         }
-    }
-
-    private showSecondInstanceAlert(): void {
-        const options = {
-            type: 'warning',
-            title: '提示',
-            message: '小贝星球星球正在运行中!',
-            buttons: ['确定'],
-        };
-        dialog.showMessageBoxSync(this._mainWindow, options);
     }
 
     private onAppWindowAllClosed(): void {
@@ -70,7 +63,7 @@ class Main {
             width: 1600,
             height: 900,
             webPreferences: {
-                preload: `${app.getAppPath()}/dist/renderer-bundle.js`,
+                // preload: `${app.getAppPath()}/dist/renderer-bundle.js`,
                 nodeIntegration: true,
                 nodeIntegrationInSubFrames: true,
                 webSecurity: false
@@ -89,47 +82,45 @@ class Main {
         }
 
         this._mainWindow.on('close', this.onClose);
-        this._mainWindow.webContents.on('crashed', this.onCrashed);
         await this._mainWindow.loadFile(`${app.getAppPath()}/dist/renderer.html`);
-        this.test();
+        // this.test();
 
         //设置菜单
-
-        const template = [
-            // {
-            //   label: '窗口',
-            //   role: 'window',
-            //   submenu: [
-            //     {
-            //       label: '重载',
-            //       click: (item, focusedWindow) => {
-            //         if (focusedWindow) {
-            //           // 重载之后, 刷新并关闭所有的次要窗体
-            //           if (focusedWindow.id === 1) {
-            //             BrowserWindow.getAllWindows().forEach((win) => {
-            //               if (win.id > 1) {
-            //                 win.close()
-            //               }
-            //             })
-            //           }
-            //           focusedWindow.reload()
-            //         }
-            //       }
-            //     },
-            //     {
-            //       label: '最小化',
-            //       role: 'minimize'
-            //     },
-            //     {
-            //       label: '切换全屏',
-            //       click: (item, focusedWindow) => {
-            //         if (focusedWindow) {
-            //           focusedWindow.setFullScreen(!focusedWindow.isFullScreen())
-            //         }
-            //       }
-            //     }
-            //   ]
-            // },
+        const template: Electron.MenuItemConstructorOptions[] = [
+            {
+                label: '窗口',
+                role: 'window',
+                submenu: [
+                    {
+                        label: '重载',
+                        click: (tMenuItem: MenuItem, tFocusedWindow: BrowserWindow, tEvent: KeyboardEvent): void => {
+                            if (tFocusedWindow) {
+                                // 重载之后, 刷新并关闭所有的次要窗体
+                                if (tFocusedWindow.id === 1) {
+                                    BrowserWindow.getAllWindows().forEach((tWin: BrowserWindow) => {
+                                        if (tWin.id > 1) {
+                                            tWin.close();
+                                        }
+                                    });
+                                }
+                                tFocusedWindow.reload();
+                            }
+                        }
+                    },
+                    {
+                        label: '最小化',
+                        role: 'minimize'
+                    },
+                    {
+                        label: '切换全屏',
+                        click: (tMenuItem: MenuItem, tFocusedWindow: BrowserWindow, tEvent: KeyboardEvent): void => {
+                            if (tFocusedWindow) {
+                                tFocusedWindow.setFullScreen(!tFocusedWindow.isFullScreen());
+                            }
+                        }
+                    }
+                ]
+            },
             {
                 label: '帮助',
                 role: 'help',
@@ -143,9 +134,9 @@ class Main {
                                 return 'Ctrl+Shift+I';
                             }
                         })(),
-                        click: (tItem: unknown, tFocusedWindow: webContents): void => {
+                        click: (tMenuItem: MenuItem, tFocusedWindow: BrowserWindow, tEvent: KeyboardEvent): void => {
                             if (tFocusedWindow) {
-                                tFocusedWindow.toggleDevTools();
+                                tFocusedWindow.webContents.toggleDevTools();
                             }
                         }
                     },
@@ -158,25 +149,9 @@ class Main {
                 ]
             }
         ];
-        // const menu = Menu.buildFromTemplate(template);
-        // Menu.setApplicationMenu(menu);
-        if (app.isPackaged) {
-            Menu.setApplicationMenu(null);
-        }
-    }
 
-    /** 程序崩溃 */
-    private onCrashed(): void {
-        const options = {
-            type: 'error',
-            title: '进程崩溃了',
-            message: '这个进程已经崩溃.',
-            buttons: ['重载', '退出'],
-        };
-        const index = dialog.showMessageBoxSync(this._mainWindow, options);
-        if (index != 0) {
-            app.quit();
-        }
+        const menu = Menu.buildFromTemplate(template);
+        Menu.setApplicationMenu(menu);
     }
 
     /** 监听窗口关闭前 */
